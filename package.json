@@ -1,0 +1,30 @@
+{
+  "name": "bsy-generic-router",
+  "description": "A generic router for Express-based projects.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Ben Botto"
+  },
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/benbotto/bsy-generic-router.git"
+  },
+  "engines": {
+    "node": "6.0.0"
+  },
+  "scripts": {},
+  "dependencies": {
+    "bsy-error": "^1.0.3",
+    "deferred": "^0.7.5",
+    "glob": "^7.0.6",
+    "insulin": "^1.0.7"
+  },
+  "devDependencies": {
+    "grunt": "^1.0.1",
+    "grunt-contrib-jshint": "^1.0.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-jasmine-nodejs": "^1.5.4",
+    "node-data-mapper": "^1.0.18"
+  }
+}
