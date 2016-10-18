@@ -221,7 +221,7 @@ function GenericRouterProducer(NotFoundError) {
       const pPKAlias = this.parentTable.getPrimaryKey()[0].getAlias();
       const pID      = req.params[pPKAlias];
 
-      this.dao.replace(this.table.getName(), pID, req.body)
+      this.dao.replace(this.parentTable.getName(), pID, req.body)
         .then(resources => res.status(201).json(resources))
         .catch(next);
     }

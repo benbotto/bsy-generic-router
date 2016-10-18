@@ -259,7 +259,7 @@ describe('GenericRouter()', function() {
 
       router.replace(req, res, next);
 
-      expect(dao.replace).toHaveBeenCalledWith('UsersCourses', 42, []);
+      expect(dao.replace).toHaveBeenCalledWith('Users', 42, []);
     });
 
     it('checks that a 201 status is returned.', function() {
