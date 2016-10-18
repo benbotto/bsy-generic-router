@@ -11,7 +11,7 @@ describe('GenericRouter()', function() {
   const users         = database.getTableByAlias('users');
   const usersCourses  = database.getTableByAlias('usersCourses');
   const daoMethods    = [
-    'create', 'retrieve', 'retrieveByID', 'update', 'delete'
+    'create', 'retrieve', 'retrieveByID', 'update', 'delete', 'replace'
   ];
 
   let req, res, next, dao;
@@ -58,7 +58,7 @@ describe('GenericRouter()', function() {
     daoMethods.forEach(function(method) {
       it(`checks that ${method} errors are propagated.`, function() {
         const err    = new Error();
-        const router = new GenericRouter(dao, users);
+        const router = new GenericRouter(dao, usersCourses, users);
 
         dao[method].and.returnValue(deferred.reject(err));
         router[method](req, res, next);
@@ -73,7 +73,7 @@ describe('GenericRouter()', function() {
   describe('DAO method call tests.', function() {
     daoMethods.forEach(function(method) {
       it(`checks that ${method} is called.`, function() {
-        const router = new GenericRouter(dao, users);
+        const router = new GenericRouter(dao, usersCourses, users);
 
         dao[method].and.returnValue(deferred.resolve({}));
         router[method](req, res, next);
@@ -89,7 +89,7 @@ describe('GenericRouter()', function() {
     daoMethods.forEach(function(method) {
       it(`checks that a successful ${method} causes serialization.`, function() {
         const resource = {resourceID: 1};
-        const router = new GenericRouter(dao, users);
+        const router = new GenericRouter(dao, usersCourses, users);
 
         dao[method].and.returnValue(deferred.resolve(resource));
         router[method](req, res, next);
@@ -236,6 +236,41 @@ describe('GenericRouter()', function() {
       router.delete(req, res, next);
       expect(res.json).toHaveBeenCalledWith(user);
       expect(dao.delete).toHaveBeenCalledWith({userID: 42});
+    });
+  });
+
+  /**
+   * Replace.
+   */
+  describe('.replace()', function() {
+    it('checks that the parent table is required.', function() {
+      expect(function() {
+        const router = new GenericRouter(dao, users);
+        router.replace(req, res, next);
+      }).toThrowError('Parent table is required for replace operations.');
+    });
+
+    it('checks that the dao is called with the right parameters.', function() {
+      const router = new GenericRouter(dao, usersCourses, users);
+
+      req.body = [];
+      req.params.userID = 42;
+      dao.replace.and.returnValue(deferred.resolve([]));
+
+      router.replace(req, res, next);
+
+      expect(dao.replace).toHaveBeenCalledWith('UsersCourses', 42, []);
+    });
+
+    it('checks that a 201 status is returned.', function() {
+      const router = new GenericRouter(dao, usersCourses, users);
+
+      req.body = [];
+      req.params.userID = 42;
+      dao.replace.and.returnValue(deferred.resolve([]));
+
+      router.replace(req, res, next);
+      expect(res.status).toHaveBeenCalledWith(201);
     });
   });
 });

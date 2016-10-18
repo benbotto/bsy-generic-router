@@ -39,6 +39,7 @@ function GenericRouterProducer(NotFoundError) {
     /**
      * Helper method that's used to check if dao has a method.
      * the dao does not have `method`.
+     * @memberOf GenericRouter
      * @param {string} method The name of the method.
      * @returns {bool} true if the method exists, false otherwise.
      */
@@ -49,6 +50,7 @@ function GenericRouterProducer(NotFoundError) {
     /**
      * Overridable method that is called when a DAO method is not implemented.
      * By default calls next with a NotFoundError instance.
+     * @memberOf GenericRouter
      * @param {string} method The name of the method.
      * @param {object} req An Express request object.
      * @param {object} res An Express response object.
@@ -62,6 +64,7 @@ function GenericRouterProducer(NotFoundError) {
     /**
      * If there is a parent, update the req.body with the parent ID from
      * req.params.  The parent ID is _expected_ to be in params.
+     * @memberOf GenericRouter
      * @param {object} req An Express request object.
      * @returns {bool} false if there is an error, true otherwise.  An error
      *          results in next() being called with an Error instance.
@@ -88,6 +91,7 @@ function GenericRouterProducer(NotFoundError) {
      * Creates the resource in req.body.  If there is a parent table, then the
      * parent's identifier is _expected_ to be in params.  The parent ID in
      * params blindly overwrites the parentID in body.
+     * @memberOf GenericRouter
      * @param {object} req An Express request object containing a resouce
      *        in body.
      * @param {object} res An Express response object.
@@ -108,6 +112,7 @@ function GenericRouterProducer(NotFoundError) {
      * the ID of the parent table is _expected_ to be in params, and the ID is
      * passed to the dao retrieve method.  Otherwise, retrieve is called with no
      * parameters.
+     * @memberOf GenericRouter
      * @param {object} req An Express request object.
      * @param {object} res An Express response object.
      * @param {function} next Called with an Error instance if an error occurs.
@@ -137,6 +142,7 @@ function GenericRouterProducer(NotFoundError) {
     /**
      * Retrieve a single resource by ID.  The resource ID is _expected_ to
      * be in params, and the ID is passed to the dao's retrieveByID method.
+     * @memberOf GenericRouter
      * @param {object} req An Express request object with a resource identifier
      *        in params.
      * @param {object} res An Express response object.
@@ -159,6 +165,7 @@ function GenericRouterProducer(NotFoundError) {
      * req.params and blindly overwrites the ID in body if it is present.  If
      * there is a parent table, the parent's ID is _expcted_ to be in
      * req.params and likewise blindly overwrites the id in body.
+     * @memberOf GenericRouter
      * @param {object} req An Express request object containing a resouce
      *        in body.  The identifier of the resource is _expcted_ to be
      *        in params.
@@ -177,7 +184,7 @@ function GenericRouterProducer(NotFoundError) {
 
     /**
      * Delete the resource identified in req.params.
-     *
+     * @memberOf GenericRouter
      * @param {object} req An Express request object containing a resource
      *        identifier in params.
      * @param {object} res An Express response object.
@@ -192,6 +199,30 @@ function GenericRouterProducer(NotFoundError) {
 
       this.dao.delete({[pkAlias]: ID})
         .then(resources => res.json(resources))
+        .catch(next);
+    }
+
+    /**
+     * Replace all of the sub resources identified in req.params.
+     * @memberOf GenericRouter
+     * @param {object} req An Express request object containing a parent resource
+     *        identifier in params, and an array of resources to replace in body.
+     * @param {object} res An Express response object.
+     * @param {function} next Called with an Error instance if an error occurs.
+     * @returns {void}
+     */
+    replace(req, res, next) {
+      if (!this._verifyImpl('replace', req, res, next)) return;
+
+      if (!this.parentTable) {
+        throw new Error('Parent table is required for replace operations.');
+      }
+
+      const pPKAlias = this.parentTable.getPrimaryKey()[0].getAlias();
+      const pID      = req.params[pPKAlias];
+
+      this.dao.replace(this.table.getName(), pID, req.body)
+        .then(resources => res.status(201).json(resources))
         .catch(next);
     }
   }
