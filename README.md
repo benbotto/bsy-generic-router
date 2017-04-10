@@ -1,2 +1,2 @@
 # bsy-generic-router
-A generic Express router that compliments bsy-generic-dao and node-data-mapper.
+A generic Express router that compliments ndm-generic-dao and node-data-mapper.
