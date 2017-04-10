@@ -8,8 +8,8 @@ describe('GenericRouter()', function() {
   const deferred      = insulin.get('deferred');
   const ndm           = insulin.get('ndm');
   const database      = new ndm.Database(require('./schema.json'));
-  const users         = database.getTableByAlias('users');
-  const usersCourses  = database.getTableByAlias('usersCourses');
+  const users         = database.getTableByMapping('users');
+  const usersCourses  = database.getTableByMapping('usersCourses');
   const daoMethods    = [
     'create', 'retrieve', 'retrieveByID', 'update', 'delete', 'replace'
   ];

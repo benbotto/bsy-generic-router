@@ -70,20 +70,20 @@ function GenericRouterProducer(NotFoundError) {
      *          results in next() being called with an Error instance.
      */
     updateBody(req) {
-      const pkAlias = this.table.getPrimaryKey()[0].getAlias();
-      let   parentPKAlias;
+      const pkMapping = this.table.primaryKey[0].mapTo;
+      let   parentPKMapping;
 
-      if (req.params[pkAlias]) {
-        req.body[pkAlias] = req.params[pkAlias];
+      if (req.params[pkMapping]) {
+        req.body[pkMapping] = req.params[pkMapping];
       }
 
       if (!this.parentTable) {
         return true;
       }
 
-      parentPKAlias = this.parentTable.getPrimaryKey()[0].getAlias();
+      parentPKMapping = this.parentTable.primaryKey[0].mapTo;
 
-      req.body[parentPKAlias] = req.params[parentPKAlias];
+      req.body[parentPKMapping] = req.params[parentPKMapping];
       return true;
     }
 
@@ -125,8 +125,8 @@ function GenericRouterProducer(NotFoundError) {
 
       if (this.parentTable) {
         // There is a parent table.  Pull the parent's ID from params.
-        const parentPKAlias = this.parentTable.getPrimaryKey()[0].getAlias();
-        const parentID      = req.params[parentPKAlias];
+        const parentPKMapping = this.parentTable.primaryKey[0].mapTo;
+        const parentID        = req.params[parentPKMapping];
 
         retRes = this.dao.retrieve(parentID);
       }
@@ -152,8 +152,8 @@ function GenericRouterProducer(NotFoundError) {
     retrieveByID(req, res, next) {
       if (!this._verifyImpl('retrieveByID', req, res, next)) return;
 
-      const pkAlias = this.table.getPrimaryKey()[0].getAlias();
-      const ID      = req.params[pkAlias];
+      const pkMapping = this.table.primaryKey[0].mapTo;
+      const ID        = req.params[pkMapping];
 
       this.dao.retrieveByID(ID)
         .then(resource => res.json(resource))
@@ -194,10 +194,10 @@ function GenericRouterProducer(NotFoundError) {
     delete(req, res, next) {
       if (!this._verifyImpl('delete', req, res, next)) return;
 
-      const pkAlias = this.table.getPrimaryKey()[0].getAlias();
-      const ID      = req.params[pkAlias];
+      const pkMapping = this.table.primaryKey[0].mapTo;
+      const ID        = req.params[pkMapping];
 
-      this.dao.delete({[pkAlias]: ID})
+      this.dao.delete({[pkMapping]: ID})
         .then(resources => res.json(resources))
         .catch(next);
     }
@@ -218,10 +218,10 @@ function GenericRouterProducer(NotFoundError) {
         throw new Error('Parent table is required for replace operations.');
       }
 
-      const pPKAlias = this.parentTable.getPrimaryKey()[0].getAlias();
-      const pID      = req.params[pPKAlias];
+      const pPKMapping = this.parentTable.primaryKey[0].mapTo;
+      const pID        = req.params[pPKMapping];
 
-      this.dao.replace(this.parentTable.getName(), pID, req.body)
+      this.dao.replace(this.parentTable.name, pID, req.body)
         .then(resources => res.status(201).json(resources))
         .catch(next);
     }
