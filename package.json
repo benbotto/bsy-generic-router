@@ -1,7 +1,7 @@
 {
   "name": "bsy-generic-router",
   "description": "A generic router for Express-based projects.",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "author": {
     "name": "Ben Botto"
   },
