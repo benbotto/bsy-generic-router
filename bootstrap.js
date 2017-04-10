@@ -7,8 +7,10 @@ const insulin = require('insulin');
 
 // Static dependencies.
 insulin
-  .factory('deferred', () => require('deferred'))
-  .factory('ndm',      () => require('node-data-mapper'));
+  .factory('deferred', () => require('deferred'));
+
+// Data mapper.
+require('node-data-mapper');
 
 // Error classes.
 require('bsy-error');
