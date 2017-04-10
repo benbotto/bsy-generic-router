@@ -99,49 +99,6 @@ describe('GenericRouter()', function() {
   });
 
   /**
-   * Update body.
-   */
-  describe('update body tests.', function() {
-    ['create', 'update'].forEach(function(method) {
-      it(`checks that if there is no parent ${method} does not trigger a body update.`, function() {
-        const user   = {userID: 42};
-        const router = new GenericRouter(dao, users);
-
-        req.body = user;
-
-        dao[method].and.returnValue(deferred.resolve(user));
-        router[method](req, res, next);
-        expect(res.json).toHaveBeenCalledWith(user);
-      });
-
-      it(`checks that if there is a parent, ${method} causes a body update.`, function() {
-        const course = {userCourseID: 12};
-        const router = new GenericRouter(dao, usersCourses, users);
-
-        req.body = course;
-        req.params.userID = 42;
-
-        dao[method].and.returnValue(deferred.resolve(course));
-        router[method](req, res, next);
-        expect(res.json).toHaveBeenCalledWith(course);
-        expect(req.body.userID).toBe(42);
-      });
-
-      it(`checks that if the pk is in params, ${method} causes a replace on body.`, function() {
-        const user   = {userID: 42};
-        const router = new GenericRouter(dao, users);
-
-        req.params.userID = user.userID;
-
-        dao[method].and.returnValue(deferred.resolve(user));
-        router[method](req, res, next);
-        expect(res.json).toHaveBeenCalledWith(user);
-        expect(req.body.userID).toBe(42);
-      });
-    });
-  });
-
-  /**
    * Create.
    */
   describe('.create()', function() {
@@ -207,18 +164,16 @@ describe('GenericRouter()', function() {
    */
   describe('.update()', function() {
     it('checks that update is called with req.body.', function() {
-      const user  = {email: 'joe.tester@gmail.com'};
+      const user  = {email: 'joe.tester@gmail.com', userID: 42};
       const router = new GenericRouter(dao, users);
 
       req.body = user;
-      req.params.userID = 42;
 
       dao.update.and.returnValue(deferred.resolve(user));
 
       router.update(req, res, next);
       expect(res.json).toHaveBeenCalledWith(user);
       expect(dao.update).toHaveBeenCalledWith(user);
-      expect(req.body.userID).toBe(42); // updated.
     });
   });
 

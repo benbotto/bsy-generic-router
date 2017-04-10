@@ -10,17 +10,17 @@ function GenericRouterProducer(NotFoundError) {
     /**
      * Initialize the router.
      * @memberOf GenericRouter
-     * @param {object} dao A data-access object, implementing create,
+     * @param {Object} dao A data-access object, implementing create,
      *        retrieve, retrieveByID, update, and delete methods.  Each method
      *        should return a promise.
      * @param {ndm.Table} table This is the
      *        table that CRUD is performed on.
-     * @param {ndm.Table} parentTable An optional parent table.
+     * @param {ndm.Table} [parentTable=null]An optional parent table.
      */
-    constructor(dao, table, parentTable) {
+    constructor(dao, table, parentTable=null) {
       this.dao         = dao;
       this.table       = table;
-      this.parentTable = parentTable || null;
+      this.parentTable = parentTable;
     }
 
     /**
@@ -52,8 +52,8 @@ function GenericRouterProducer(NotFoundError) {
      * By default calls next with a NotFoundError instance.
      * @memberOf GenericRouter
      * @param {string} method The name of the method.
-     * @param {object} req An Express request object.
-     * @param {object} res An Express response object.
+     * @param {Object} req An Express request object.
+     * @param {Object} res An Express response object.
      * @param {function} next An Express next method that is called with a
      *        NotFoundError instance if method is not defined on dao.
      */
@@ -62,45 +62,16 @@ function GenericRouterProducer(NotFoundError) {
     }
 
     /**
-     * If there is a parent, update the req.body with the parent ID from
-     * req.params.  The parent ID is _expected_ to be in params.
+     * Creates the resource in req.body.
      * @memberOf GenericRouter
-     * @param {object} req An Express request object.
-     * @returns {bool} false if there is an error, true otherwise.  An error
-     *          results in next() being called with an Error instance.
-     */
-    updateBody(req) {
-      const pkMapping = this.table.primaryKey[0].mapTo;
-      let   parentPKMapping;
-
-      if (req.params[pkMapping]) {
-        req.body[pkMapping] = req.params[pkMapping];
-      }
-
-      if (!this.parentTable) {
-        return true;
-      }
-
-      parentPKMapping = this.parentTable.primaryKey[0].mapTo;
-
-      req.body[parentPKMapping] = req.params[parentPKMapping];
-      return true;
-    }
-
-    /**
-     * Creates the resource in req.body.  If there is a parent table, then the
-     * parent's identifier is _expected_ to be in params.  The parent ID in
-     * params blindly overwrites the parentID in body.
-     * @memberOf GenericRouter
-     * @param {object} req An Express request object containing a resouce
+     * @param {Object} req An Express request object containing a resouce
      *        in body.
-     * @param {object} res An Express response object.
+     * @param {Object} res An Express response object.
      * @param {function} next Called with an Error instance if an error occurs.
      * @returns {void}
      */
     create(req, res, next) {
       if (!this._verifyImpl('create', req, res, next)) return;
-      if (!this.updateBody(req)) return;
 
       this.dao.create(req.body)
         .then(resource => res.status(201).json(resource))
@@ -113,8 +84,8 @@ function GenericRouterProducer(NotFoundError) {
      * passed to the dao retrieve method.  Otherwise, retrieve is called with no
      * parameters.
      * @memberOf GenericRouter
-     * @param {object} req An Express request object.
-     * @param {object} res An Express response object.
+     * @param {Object} req An Express request object.
+     * @param {Object} res An Express response object.
      * @param {function} next Called with an Error instance if an error occurs.
      * @returns {void}
      */
@@ -143,9 +114,9 @@ function GenericRouterProducer(NotFoundError) {
      * Retrieve a single resource by ID.  The resource ID is _expected_ to
      * be in params, and the ID is passed to the dao's retrieveByID method.
      * @memberOf GenericRouter
-     * @param {object} req An Express request object with a resource identifier
+     * @param {Object} req An Express request object with a resource identifier
      *        in params.
-     * @param {object} res An Express response object.
+     * @param {Object} res An Express response object.
      * @param {function} next Called with an Error instance if an error occurs.
      * @returns {void}
      */
@@ -161,21 +132,17 @@ function GenericRouterProducer(NotFoundError) {
     }
 
     /**
-     * Update the resource in req.body.  The resource ID is _expected_ to be in
-     * req.params and blindly overwrites the ID in body if it is present.  If
-     * there is a parent table, the parent's ID is _expcted_ to be in
-     * req.params and likewise blindly overwrites the id in body.
+     * Update the resource in req.body.
      * @memberOf GenericRouter
-     * @param {object} req An Express request object containing a resouce
+     * @param {Object} req An Express request object containing a resouce
      *        in body.  The identifier of the resource is _expcted_ to be
      *        in params.
-     * @param {object} res An Express response object.
+     * @param {Object} res An Express response object.
      * @param {function} next Called with an Error instance if an error occurs.
      * @returns {void}
      */
     update(req, res, next) {
       if (!this._verifyImpl('update', req, res, next)) return;
-      if (!this.updateBody(req)) return;
 
       this.dao.update(req.body)
         .then(resource => res.json(resource))
@@ -185,9 +152,9 @@ function GenericRouterProducer(NotFoundError) {
     /**
      * Delete the resource identified in req.params.
      * @memberOf GenericRouter
-     * @param {object} req An Express request object containing a resource
+     * @param {Object} req An Express request object containing a resource
      *        identifier in params.
-     * @param {object} res An Express response object.
+     * @param {Object} res An Express response object.
      * @param {function} next Called with an Error instance if an error occurs.
      * @returns {void}
      */
@@ -203,11 +170,12 @@ function GenericRouterProducer(NotFoundError) {
     }
 
     /**
-     * Replace all of the sub resources identified in req.params.
+     * Replace all of the sub resources identified in req.params.  The parent ID
+     * is _expected_ to be in params.
      * @memberOf GenericRouter
-     * @param {object} req An Express request object containing a parent resource
+     * @param {Object} req An Express request object containing a parent resource
      *        identifier in params, and an array of resources to replace in body.
-     * @param {object} res An Express response object.
+     * @param {Object} res An Express response object.
      * @param {function} next Called with an Error instance if an error occurs.
      * @returns {void}
      */
