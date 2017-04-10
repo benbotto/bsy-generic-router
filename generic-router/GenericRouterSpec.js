@@ -7,7 +7,7 @@ describe('GenericRouter()', function() {
   const GenericRouter = insulin.get('GenericRouter');
   const deferred      = insulin.get('deferred');
   const ndm           = insulin.get('ndm');
-  const database      = new ndm.Database(require('./schema.json'));
+  const database      = new ndm.Database(require('../spec/schema.json'));
   const users         = database.getTableByMapping('users');
   const usersCourses  = database.getTableByMapping('usersCourses');
   const daoMethods    = [
