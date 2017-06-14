@@ -193,6 +193,24 @@ function GenericRouterProducer(NotFoundError) {
         .then(resources => res.status(201).json(resources))
         .catch(next);
     }
+
+    /**
+     * Options is used to get the schema of the API, which documents what
+     * properties are accepted, required, etc.
+     * @memberOf GenericRouter
+     * @param {Object} req An Express request object containing a parent resource
+     *        identifier in params, and an array of resources to replace in body.
+     * @param {Object} res An Express response object.
+     * @param {function} next Called with an Error instance if an error occurs.
+     * @returns {void}
+     */
+    options(req, res, next) {
+      if (!this._verifyImpl('options', req, res, next)) return;
+
+      this.dao.options()
+        .then(desc => res.json(desc))
+        .catch(next);
+    }
   }
 
   return GenericRouter;
