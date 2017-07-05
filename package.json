@@ -25,6 +25,8 @@
     "grunt-contrib-jshint": "^1.0.0",
     "grunt-contrib-watch": "^1.0.0",
     "grunt-jasmine-nodejs": "^1.5.4",
-    "node-data-mapper": "^1.1.21"
+    "ndm-generic-dao": "^1.1.7",
+    "node-data-mapper": "^1.1.21",
+    "node-data-mapper-mysql": "^1.1.22"
   }
 }

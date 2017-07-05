@@ -1,13 +1,10 @@
 describe('GenericRouter()', function() {
   'use strict';
 
-  require('../bootstrap');
-
   const insulin       = require('insulin').mock();
   const GenericRouter = insulin.get('GenericRouter');
   const deferred      = insulin.get('deferred');
-  const Database      = insulin.get('ndm_Database');
-  const database      = new Database(require('../spec/schema.json'));
+  const database      = insulin.get('ndm_testDB');
   const users         = database.getTableByMapping('users');
   const usersCourses  = database.getTableByMapping('usersCourses');
   const daoMethods    = [
