@@ -4,6 +4,7 @@
  * This script sets up the dependency injection container, insulin.
  */
 const insulin = require('insulin');
+const scripts = (require('./grunt/scriptGarner.js'))().app;
 
 // Static dependencies.
 insulin
@@ -16,24 +17,8 @@ require('node-data-mapper');
 require('bsy-error');
 
 // Application (dynamic) dependencies.
-const glob = require('glob');
-const opts = {
-  cwd: __dirname,
-  ignore: [
-    './node_modules/**',
-    './grunt/**',
-    './Gruntfile.js',
-    './**/*Spec.js',
-    './bootstrap.js',
-    './index.js'
-  ]
-};
-
-const files = glob.sync('./**/*.js', opts);
-
-// Let each file register itself with the DiC.
-files.forEach(require);
+scripts.forEach(script => require(script));
 
 // Export the list of files.
-module.exports = files;
+module.exports = scripts;
 
