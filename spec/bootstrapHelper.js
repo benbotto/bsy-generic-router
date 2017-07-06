@@ -3,6 +3,7 @@
 // MySQL-specific code is used when testing (QueryExecuter and Escaper).
 // This has to be included before bootstrap or else the ndm_ namespace
 // will get overwritten.
+require('ndm-generic-dao');
 require('node-data-mapper-mysql');
 
 require('../bootstrap');

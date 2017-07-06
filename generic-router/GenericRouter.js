@@ -2,7 +2,7 @@
 
 require('insulin').factory('GenericRouter', GenericRouterProducer);
 
-function GenericRouterProducer(NotFoundError) {
+function GenericRouterProducer(deferred, NotFoundError, ValidationError) {
   /**
    * A base class for CRUD routers.
    */
@@ -132,10 +132,33 @@ function GenericRouterProducer(NotFoundError) {
     }
 
     /**
+     * Retrieve a list of resources, filtered using a where clause.  The where
+     * clause is expected to be in a query property, as well a param property.
+     * @memberOf GenericRouter
+     * @param {Object} req An Express request object with where and param
+     *        properties in query.
+     * @param {Object} res An Express response object.
+     * @param {function} next Called with an Error instance if an error occurs.
+     * @returns {void}
+     */
+    retrieveWhere(req, res, next) {
+      if (!this._verifyImpl('retrieve', req, res, next)) return;
+
+      try {
+        return this.dao.retrieve(req.query.where, req.query.params);
+      }
+      catch (err) {
+        if (err.code === 'CONDITION_ERROR')
+          return deferred.reject(new ValidationError(err.message, err.code, 'where'));
+        return deferred.reject(err);
+      }
+    }
+
+    /**
      * Update the resource in req.body.
      * @memberOf GenericRouter
      * @param {Object} req An Express request object containing a resouce
-     *        in body.  The identifier of the resource is _expcted_ to be
+     *        in body.  The identifier of the resource is _expected_ to be
      *        in params.
      * @param {Object} res An Express response object.
      * @param {function} next Called with an Error instance if an error occurs.

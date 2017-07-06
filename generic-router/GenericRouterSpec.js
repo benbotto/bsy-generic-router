@@ -5,6 +5,8 @@ describe('GenericRouter()', function() {
   const GenericRouter = insulin.get('GenericRouter');
   const deferred      = insulin.get('deferred');
   const database      = insulin.get('ndm_testDB');
+  const DataContext   = insulin.get('ndm_MySQLDataContext');
+  const GenericDao    = insulin.get('ndm_GenericDao');
   const users         = database.getTableByMapping('users');
   const usersCourses  = database.getTableByMapping('usersCourses');
   const daoMethods    = [
@@ -19,7 +21,8 @@ describe('GenericRouter()', function() {
     // Fake request with dummy values.
     req = {
       body  : {},
-      params: {}
+      params: {},
+      query : {}
     };
 
     // Fake response with json and status methods.  Status returns res so that
@@ -153,6 +156,124 @@ describe('GenericRouter()', function() {
       router.retrieveByID(req, res, next);
       expect(dao.retrieveByID).toHaveBeenCalledWith(12);
       expect(res.json).toHaveBeenCalledWith(course);
+    });
+  });
+
+  /**
+   * Retrieve where (filtered).
+   */
+  describe('.retrieveWhere()', function() {
+    let usersDao, pool, dataContext;
+
+    beforeEach(function() {
+      pool        = jasmine.createSpyObj('pool', ['query']);
+      dataContext = new DataContext(database, pool);
+      usersDao    = new GenericDao(dataContext, 'Users');
+    });
+
+    it('checks that an error is thrown if "retrieve" is not implemented.', function() {
+      const router = new GenericRouter({}, 'Users');
+
+      router.retrieveWhere(req, res, next);
+      expect(next.calls.argsFor(0)[0].message).toBe('Method retrieve not available.');
+    });
+
+    it('checks that the query is not filtered if no where clause is present.', function() {
+      const router = new GenericRouter(usersDao, 'Users');
+      
+      pool.query.and.callFake((sql, params, callback) => {
+        expect(sql).toBe(
+          'SELECT  `Users`.`createdOn` AS `Users.createdOn`,\n' +
+          '        `Users`.`email` AS `Users.email`,\n' +
+          '        `Users`.`extUserID` AS `Users.extUserID`,\n' +
+          '        `Users`.`lastLogin` AS `Users.lastLogin`,\n' +
+          '        `Users`.`name` AS `Users.name`,\n' +
+          '        `Users`.`userID` AS `Users.userID`\n' +
+          'FROM    `Users` AS `Users`'
+        );
+        expect(params).toEqual({});
+        callback(null, []);
+      });
+
+      router.retrieveWhere(req, res, next)
+        .catch(() => expect(true).toBe(false));
+
+      expect(pool.query).toHaveBeenCalled();
+    });
+
+    it('checks that a valid where condition is used to filter the query.', function() {
+      const router = new GenericRouter(usersDao, 'Users');
+      
+      pool.query.and.callFake((sql, params, callback) => {
+        expect(sql).toBe(
+          'SELECT  `Users`.`createdOn` AS `Users.createdOn`,\n' +
+          '        `Users`.`email` AS `Users.email`,\n' +
+          '        `Users`.`extUserID` AS `Users.extUserID`,\n' +
+          '        `Users`.`lastLogin` AS `Users.lastLogin`,\n' +
+          '        `Users`.`name` AS `Users.name`,\n' +
+          '        `Users`.`userID` AS `Users.userID`\n' +
+          'FROM    `Users` AS `Users`\n' +
+          'WHERE   `Users`.`name` = :name'
+        );
+        expect(params).toEqual({name: 'Joe Tester'});
+        callback(null, []);
+      });
+
+      req.query.where  = {$eq: {'Users.name': ':name'}};
+      req.query.params = {name: 'Joe Tester'};
+
+      router.retrieveWhere(req, res, next)
+        .catch(() => expect(true).toBe(false));
+
+      expect(pool.query).toHaveBeenCalled();
+    });
+
+    it('checks that a ValidationError occurs if the where condition is invalid.', function() {
+      const router = new GenericRouter(usersDao, 'Users');
+      req.query.where  = {};
+      req.query.params = {};
+
+      router.retrieveWhere(req, res, next)
+        .catch(err => expect(err.name).toBe('ValidationError'));
+
+      expect(pool.query).not.toHaveBeenCalled();
+    });
+
+    it('checks that a ValidationError occurs if a column is not available for filtering.', function() {
+      const router = new GenericRouter(usersDao, 'Users');
+      req.query.where  = {$eq: {'Users.foobar': ':foo'}};
+      req.query.params = {};
+
+      router.retrieveWhere(req, res, next)
+        .catch(err => expect(err.name).toBe('ValidationError'));
+
+      expect(pool.query).not.toHaveBeenCalled();
+    });
+
+    it('checks that a ValidationError occurs if a replacement parameter is missing.', function() {
+      const router = new GenericRouter(usersDao, 'Users');
+      req.query.where  = {$eq: {'Users.name': ':foo'}};
+      req.query.params = {};
+
+      router.retrieveWhere(req, res, next)
+        .catch(err => expect(err.name).toBe('ValidationError'));
+
+      expect(pool.query).not.toHaveBeenCalled();
+    });
+
+    it('checks that non-Condition errors are propagated.', function() {
+      const router = new GenericRouter(usersDao, 'Users');
+      const err    = new Error('An error');
+      
+      pool.query.and.callFake((sql, params, callback) => callback(err));
+
+      req.query.where  = {$eq: {'Users.name': ':name'}};
+      req.query.params = {name: 'Joe Tester'};
+
+      router.retrieveWhere(req, res, next)
+        .catch(e => expect(e).toBe(err));
+
+      expect(pool.query).toHaveBeenCalled();
     });
   });
 
