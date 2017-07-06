@@ -10,7 +10,7 @@ describe('GenericRouter()', function() {
   const users         = database.getTableByMapping('users');
   const usersCourses  = database.getTableByMapping('usersCourses');
   const daoMethods    = [
-    'create', 'retrieve', 'retrieveByID', 'update', 'delete', 'replace'
+    'create', 'retrieve', 'retrieveByID', 'update', 'delete', 'replace', 'options'
   ];
 
   let req, res, next, dao;
