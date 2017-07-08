@@ -1,7 +1,7 @@
 {
   "name": "bsy-generic-router",
   "description": "A generic router for Express-based projects.",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "author": {
     "name": "Ben Botto"
   },
@@ -26,7 +26,7 @@
     "grunt-contrib-watch": "^1.0.0",
     "grunt-jasmine-nodejs": "^1.5.4",
     "ndm-generic-dao": "^1.1.7",
-    "node-data-mapper": "^1.1.21",
+    "node-data-mapper": "^1.1.24",
     "node-data-mapper-mysql": "^1.1.22"
   }
 }
