@@ -2,7 +2,7 @@
 
 require('insulin').factory('GenericRouter', GenericRouterProducer);
 
-function GenericRouterProducer(deferred, NotFoundError, ValidationError) {
+function GenericRouterProducer(NotFoundError, ValidationError) {
   /**
    * A base class for CRUD routers.
    */
@@ -144,13 +144,35 @@ function GenericRouterProducer(deferred, NotFoundError, ValidationError) {
     retrieveWhere(req, res, next) {
       if (!this._verifyImpl('retrieve', req, res, next)) return;
 
+      let where, params;
+
       try {
-        return this.dao.retrieve(req.query.where, req.query.params);
+        if (req.query.where)
+          where = JSON.parse(req.query.where);
+      }
+      catch (e) {
+        next(new ValidationError(`"where" does not contain valid JSON: ${e.message}`, 'VAL_JSON', 'where'));
+        return;
+      }
+
+      try {
+        if (req.query.params)
+          params = JSON.parse(req.query.params);
+      }
+      catch (e) {
+        next(new ValidationError(`"params" does not contain valid JSON: ${e.message}`, 'VAL_JSON', 'params'));
+        return;
+      }
+
+      try {
+        this.dao.retrieve(where, params)
+          .then(resources => res.json(resources))
+          .catch(next);
       }
       catch (err) {
         if (err.code === 'CONDITION_ERROR')
-          return deferred.reject(new ValidationError(err.message, err.code, 'where'));
-        return deferred.reject(err);
+          next(new ValidationError(err.message, err.code, 'where'));
+        next(err);
       }
     }
 

@@ -195,10 +195,10 @@ describe('GenericRouter()', function() {
         callback(null, []);
       });
 
-      router.retrieveWhere(req, res, next)
-        .catch(() => expect(true).toBe(false));
-
+      router.retrieveWhere(req, res, next);
       expect(pool.query).toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalled();
+      expect(next).not.toHaveBeenCalled();
     });
 
     it('checks that a valid where condition is used to filter the query.', function() {
@@ -219,24 +219,50 @@ describe('GenericRouter()', function() {
         callback(null, []);
       });
 
-      req.query.where  = {$eq: {'Users.name': ':name'}};
-      req.query.params = {name: 'Joe Tester'};
+      req.query.where  = JSON.stringify({$eq: {'Users.name': ':name'}});
+      req.query.params = JSON.stringify({name: 'Joe Tester'});
 
-      router.retrieveWhere(req, res, next)
-        .catch(() => expect(true).toBe(false));
-
+      router.retrieveWhere(req, res, next);
       expect(pool.query).toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalled();
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('checks that a ValidationError occurs if "where" contains invalid JSON.', function() {
+      const router = new GenericRouter(usersDao, 'Users');
+      req.query.where  = '{foo}';
+      req.query.params = JSON.stringify({});
+
+      router.retrieveWhere(req, res, next);
+      expect(pool.query).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+      expect(next.calls.argsFor(0)[0].name).toBe('ValidationError');
+      expect(next.calls.argsFor(0)[0].message).toBe(
+        '"where" does not contain valid JSON: Unexpected token f in JSON at position 1');
+    });
+
+    it('checks that a ValidationError occurs if "params" contains invalid JSON.', function() {
+      const router = new GenericRouter(usersDao, 'Users');
+      req.query.where  = JSON.stringify({$eq:{'Users.name': ':name'}});
+      req.query.params = '{foo}';
+
+      router.retrieveWhere(req, res, next);
+      expect(pool.query).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+      expect(next.calls.argsFor(0)[0].name).toBe('ValidationError');
+      expect(next.calls.argsFor(0)[0].message).toBe(
+        '"params" does not contain valid JSON: Unexpected token f in JSON at position 1');
     });
 
     it('checks that a ValidationError occurs if the where condition is invalid.', function() {
       const router = new GenericRouter(usersDao, 'Users');
-      req.query.where  = {};
-      req.query.params = {};
+      req.query.where  = JSON.stringify({});
+      req.query.params = JSON.stringify({});
 
-      router.retrieveWhere(req, res, next)
-        .catch(err => expect(err.name).toBe('ValidationError'));
-
+      router.retrieveWhere(req, res, next);
       expect(pool.query).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+      expect(next.calls.argsFor(0)[0].name).toBe('ValidationError');
     });
 
     it('checks that a ValidationError occurs if a column is not available for filtering.', function() {
@@ -244,21 +270,21 @@ describe('GenericRouter()', function() {
       req.query.where  = {$eq: {'Users.foobar': ':foo'}};
       req.query.params = {};
 
-      router.retrieveWhere(req, res, next)
-        .catch(err => expect(err.name).toBe('ValidationError'));
-
+      router.retrieveWhere(req, res, next);
       expect(pool.query).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+      expect(next.calls.argsFor(0)[0].name).toBe('ValidationError');
     });
 
     it('checks that a ValidationError occurs if a replacement parameter is missing.', function() {
       const router = new GenericRouter(usersDao, 'Users');
-      req.query.where  = {$eq: {'Users.name': ':foo'}};
-      req.query.params = {};
+      req.query.where  = JSON.stringify({$eq: {'Users.name': ':foo'}});
+      req.query.params = JSON.stringify({});
 
-      router.retrieveWhere(req, res, next)
-        .catch(err => expect(err.name).toBe('ValidationError'));
-
+      router.retrieveWhere(req, res, next);
       expect(pool.query).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+      expect(next.calls.argsFor(0)[0].name).toBe('ValidationError');
     });
 
     it('checks that non-Condition errors are propagated.', function() {
@@ -267,13 +293,12 @@ describe('GenericRouter()', function() {
       
       pool.query.and.callFake((sql, params, callback) => callback(err));
 
-      req.query.where  = {$eq: {'Users.name': ':name'}};
-      req.query.params = {name: 'Joe Tester'};
+      req.query.where  = JSON.stringify({$eq: {'Users.name': ':name'}});
+      req.query.params = JSON.stringify({name: 'Joe Tester'});
 
-      router.retrieveWhere(req, res, next)
-        .catch(e => expect(e).toBe(err));
-
+      router.retrieveWhere(req, res, next);
       expect(pool.query).toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(err);
     });
   });
 
