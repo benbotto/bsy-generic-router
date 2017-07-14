@@ -172,7 +172,8 @@ function GenericRouterProducer(NotFoundError, ValidationError) {
       catch (err) {
         if (err.code === 'CONDITION_ERROR')
           next(new ValidationError(err.message, err.code, 'where'));
-        next(err);
+        else
+          next(err);
       }
     }
 

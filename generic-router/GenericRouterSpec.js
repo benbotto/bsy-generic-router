@@ -287,6 +287,15 @@ describe('GenericRouter()', function() {
       expect(next.calls.argsFor(0)[0].name).toBe('ValidationError');
     });
 
+    it('checks that next is only called once if a ConditionError occurs.', function() {
+      const router = new GenericRouter(usersDao, 'Users');
+      req.query.where  = JSON.stringify({$eq: {'Users.name': ':foo'}});
+      req.query.params = JSON.stringify({});
+
+      router.retrieveWhere(req, res, next);
+      expect(next.calls.count()).toBe(1);
+    });
+
     it('checks that non-Condition errors are propagated.', function() {
       const router = new GenericRouter(usersDao, 'Users');
       const err    = new Error('An error');
